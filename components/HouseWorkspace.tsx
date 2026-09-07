@@ -1,16 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { FloorPlan } from "@/components/FloorPlan";
-import { House3D } from "@/components/House3D";
+import { useMemo, useState } from "react";
 import { initialHouseState, type RoomId } from "@/lib/house";
+import { scenesForRoom } from "@/lib/render-scenes";
 
 export function HouseWorkspace() {
   const [activeRoom, setActiveRoom] = useState<RoomId>("soggiorno-cucina");
-  const [showPlan, setShowPlan] = useState(false);
-  const [show3D, setShow3D] = useState(true);
-  const [focusMode, setFocusMode] = useState(true);
-  const [activeViewpointId, setActiveViewpointId] = useState<string | undefined>("living-1");
+  const [activeSceneId, setActiveSceneId] = useState("living-01");
   const [prompt, setPrompt] = useState("");
   const [activity, setActivity] = useState<string[]>([]);
 
@@ -19,36 +15,34 @@ export function HouseWorkspace() {
     [activeRoom]
   );
 
+  const scenes = useMemo(() => scenesForRoom(activeRoom), [activeRoom]);
+  const activeScene = scenes.find((scene) => scene.id === activeSceneId) ?? scenes[0];
   const roomElements = initialHouseState.elements.filter((item) => item.roomId === activeRoom);
-
-  useEffect(() => {
-    setActiveViewpointId(room.viewpoints[0]?.id);
-  }, [room]);
 
   const selectRoom = (roomId: RoomId) => {
     setActiveRoom(roomId);
-    setShow3D(true);
-    setFocusMode(true);
+    const first = scenesForRoom(roomId)[0];
+    if (first) setActiveSceneId(first.id);
   };
 
   const submitPrompt = () => {
     const trimmed = prompt.trim();
-    if (!trimmed) return;
+    if (!trimmed || !activeScene) return;
     setActivity((current) => [
-      `Richiesta registrata per ${room.name}: “${trimmed}”`,
+      `Modifica richiesta su “${activeScene.title}”: ${trimmed}`,
       ...current,
     ].slice(0, 4));
     setPrompt("");
   };
 
   return (
-    <main className="app-shell">
+    <main className="app-shell render-first-shell">
       <aside className="sidebar">
         <div>
           <p className="eyebrow">Casa Milano</p>
-          <h1>Digital House MVP</h1>
+          <h1>Digital House</h1>
           <p className="muted">
-            Altezza {initialHouseState.ceilingHeightM.toFixed(2)} m · scala sorgente {initialHouseState.sourceScale}
+            Esperienza render-first · altezza {initialHouseState.ceilingHeightM.toFixed(2)} m · master plan 1:50
           </p>
         </div>
 
@@ -65,94 +59,79 @@ export function HouseWorkspace() {
           ))}
         </nav>
 
-        <div className="sidebar-actions">
-          <button className="secondary-button" onClick={() => setShowPlan((value) => !value)}>
-            {showPlan ? "Chiudi planimetria" : "Apri planimetria"}
-          </button>
-          <button className="secondary-button" onClick={() => setShow3D((value) => !value)}>
-            {show3D ? "Nascondi modello 3D" : "Mostra modello 3D"}
-          </button>
+        <div className="sidebar-note">
+          <p className="eyebrow">Principio M1</p>
+          <p>2–3 viste statiche ad alta fedeltà per ambiente. Nessuna navigazione manuale del modello.</p>
         </div>
       </aside>
 
-      <section className="workspace">
+      <section className="workspace render-workspace">
         <header className="topbar">
           <div>
             <p className="eyebrow">Ambiente</p>
             <h2>{room.name}</h2>
             <p className="muted room-description">{room.description}</p>
           </div>
-          <button
-            className="primary-button"
-            onClick={() => {
-              setShow3D(true);
-              setFocusMode(true);
-              setActiveViewpointId(room.viewpoints[0]?.id);
-            }}
-          >
-            Avvia visita in 3D
-          </button>
+          <div className="fidelity-badge">
+            <strong>Target: render architettonico</strong>
+            <span>geometria fedele · materiali · luce · arredi riconoscibili</span>
+          </div>
         </header>
 
-        {showPlan && (
-          <section className="plan-panel">
-            <div className="section-heading">
-              <div>
-                <p className="eyebrow">M0 / Geometria</p>
-                <h3>Planimetria interattiva preliminare</h3>
-              </div>
-              <p className="muted">Clicca un ambiente per aprirlo.</p>
+        {activeScene && (
+          <section className="hero-render-card">
+            <div className="render-stage">
+              {activeScene.imageSrc ? (
+                <img src={activeScene.imageSrc} alt={activeScene.title} />
+              ) : (
+                <div className="render-pending">
+                  <span>Render ad alta fedeltà</span>
+                  <strong>{activeScene.title}</strong>
+                  <p>{activeScene.cameraIntent}</p>
+                  <small>La vista 3D volumetrica precedente è stata rimossa: questa area ospiterà solo render statici coerenti con la planimetria master.</small>
+                </div>
+              )}
             </div>
-            <FloorPlan activeRoom={activeRoom} onSelectRoom={selectRoom} />
+            <div className="render-meta">
+              <div>
+                <p className="eyebrow">Deve mostrare</p>
+                <div className="chips left">
+                  {activeScene.mustShow.map((item) => <span className="chip" key={item}>{item}</span>)}
+                </div>
+              </div>
+              <div>
+                <p className="eyebrow">Vincoli di fedeltà</p>
+                <ul className="fidelity-list">
+                  {activeScene.fidelityNotes.map((note) => <li key={note}>{note}</li>)}
+                </ul>
+              </div>
+            </div>
           </section>
         )}
 
-        {show3D && (
-          <section className="viewer-panel">
-            <div className="section-heading viewer-heading">
-              <div>
-                <p className="eyebrow">M1 / Digital House</p>
-                <h3>{focusMode ? "Focus ambiente" : "Modello 3D completo"}</h3>
-              </div>
-              <div className="viewer-actions">
-                <button
-                  className={focusMode ? "toggle-button active" : "toggle-button"}
-                  onClick={() => setFocusMode((value) => !value)}
-                >
-                  {focusMode ? "Mostra tutta la casa" : "Focus ambiente"}
-                </button>
-                <button className="text-button" onClick={() => setActiveViewpointId(undefined)}>
-                  Vista generale
-                </button>
-              </div>
-            </div>
-            <House3D activeRoom={activeRoom} activeViewpointId={activeViewpointId} focusMode={focusMode} />
-          </section>
-        )}
-
-        <section className="strategic-views">
+        <section className="static-scenes-section">
           <div className="section-heading">
             <div>
-              <p className="eyebrow">Viste dell'ambiente</p>
-              <h3>{room.viewpoints.length} angoli strategici</h3>
+              <p className="eyebrow">Viste statiche</p>
+              <h3>{scenes.length} render per questo ambiente</h3>
             </div>
-            <p className="muted">Clicca una vista: la camera 3D si posiziona nello stesso punto previsto per i futuri render.</p>
+            <p className="muted">Gli angoli restano fissi: le modifiche AI rigenerano le stesse viste per facilitare il confronto.</p>
           </div>
 
-          <div className="viewpoint-grid">
-            {room.viewpoints.map((viewpoint, index) => (
+          <div className="static-scenes-grid">
+            {scenes.map((scene, index) => (
               <button
-                key={viewpoint.id}
-                className={activeViewpointId === viewpoint.id ? "viewpoint-card active" : "viewpoint-card"}
-                onClick={() => {
-                  setShow3D(true);
-                  setFocusMode(true);
-                  setActiveViewpointId(viewpoint.id);
-                }}
+                key={scene.id}
+                className={activeScene?.id === scene.id ? "static-scene-card active" : "static-scene-card"}
+                onClick={() => setActiveSceneId(scene.id)}
               >
-                <span>Vista {index + 1}</span>
-                <strong>{viewpoint.name}</strong>
-                <small>{viewpoint.description}</small>
+                <div className="scene-thumbnail">
+                  {scene.imageSrc ? <img src={scene.imageSrc} alt="" /> : <span>{String(index + 1).padStart(2, "0")}</span>}
+                </div>
+                <div>
+                  <strong>{scene.title}</strong>
+                  <small>{scene.cameraIntent}</small>
+                </div>
               </button>
             ))}
           </div>
@@ -162,12 +141,13 @@ export function HouseWorkspace() {
           <div className="prompt-card">
             <div>
               <p className="eyebrow">Modifica con AI</p>
-              <h3>Chiedi una modifica a {room.name}</h3>
+              <h3>Modifica {activeScene ? `“${activeScene.title}”` : room.name}</h3>
+              <p className="muted">Descrivi il risultato desiderato. Se posizione, dimensione, materiale o colore non sono sufficientemente chiari, il sistema dovrà prima chiederti conferma.</p>
             </div>
             <textarea
               value={prompt}
               onChange={(event) => setPrompt(event.target.value)}
-              placeholder="Es. Rendi il parquet più chiaro, cambia il mobile TV o modifica la cucina."
+              placeholder="Es. Mantieni il layout, ma usa un parquet in rovere naturale più chiaro e ante cucina bianco caldo opaco."
               rows={4}
             />
             <div className="prompt-actions">
@@ -176,7 +156,7 @@ export function HouseWorkspace() {
                 onClick={() => setActivity((current) => current.slice(1))}
                 disabled={activity.length === 0}
               >
-                Annulla ultima modifica
+                Annulla ultima richiesta
               </button>
               <button className="primary-button" onClick={submitPrompt}>Invia</button>
             </div>
@@ -190,9 +170,7 @@ export function HouseWorkspace() {
           <div className="ideas-card">
             <p className="eyebrow">Ispirazione</p>
             <h3>Esplora idee</h3>
-            <p className="muted">
-              In M3 mostrerà 3 soluzioni online simili per spazio, layout o stile, sempre con link al post originale.
-            </p>
+            <p className="muted">Mostrerà solo 3 soluzioni online comparabili per layout, spazio o stile, ciascuna con link al post originale.</p>
             <button className="secondary-button">Esplora 3 idee</button>
           </div>
         </section>
@@ -200,14 +178,12 @@ export function HouseWorkspace() {
         <section className="model-summary">
           <div>
             <p className="eyebrow">House State</p>
-            <h3>Elementi modellati in questo ambiente</h3>
+            <h3>Elementi rilevanti</h3>
           </div>
           <div className="chips">
             {roomElements.length > 0 ? roomElements.map((item) => (
-              <span className="chip" key={item.id}>
-                {item.name}{item.configurable ? " · modificabile" : " · fisso"}
-              </span>
-            )) : <span className="muted">Gli elementi puntuali verranno aggiunti durante la calibrazione geometrica.</span>}
+              <span className="chip" key={item.id}>{item.name}{item.configurable ? " · modificabile" : " · fisso"}</span>
+            )) : <span className="muted">Nessun elemento puntuale ancora codificato.</span>}
           </div>
         </section>
       </section>
