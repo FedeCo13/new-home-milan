@@ -2,11 +2,13 @@
 
 import { useMemo, useState } from "react";
 import { FloorPlan } from "@/components/FloorPlan";
+import { House3D } from "@/components/House3D";
 import { initialHouseState, type RoomId } from "@/lib/house";
 
 export function HouseWorkspace() {
   const [activeRoom, setActiveRoom] = useState<RoomId>("soggiorno-cucina");
   const [showPlan, setShowPlan] = useState(false);
+  const [show3D, setShow3D] = useState(true);
   const [prompt, setPrompt] = useState("");
   const [activity, setActivity] = useState<string[]>([]);
 
@@ -51,9 +53,14 @@ export function HouseWorkspace() {
           ))}
         </nav>
 
-        <button className="secondary-button" onClick={() => setShowPlan((value) => !value)}>
-          {showPlan ? "Chiudi planimetria" : "Apri planimetria"}
-        </button>
+        <div className="sidebar-actions">
+          <button className="secondary-button" onClick={() => setShowPlan((value) => !value)}>
+            {showPlan ? "Chiudi planimetria" : "Apri planimetria"}
+          </button>
+          <button className="secondary-button" onClick={() => setShow3D((value) => !value)}>
+            {show3D ? "Nascondi modello 3D" : "Mostra modello 3D"}
+          </button>
+        </div>
       </aside>
 
       <section className="workspace">
@@ -63,7 +70,7 @@ export function HouseWorkspace() {
             <h2>{room.name}</h2>
             <p className="muted room-description">{room.description}</p>
           </div>
-          <button className="primary-button">Avvia visita in 3D</button>
+          <button className="primary-button" onClick={() => setShow3D(true)}>Avvia visita in 3D</button>
         </header>
 
         {showPlan && (
@@ -76,6 +83,19 @@ export function HouseWorkspace() {
               <p className="muted">Clicca un ambiente per aprirlo.</p>
             </div>
             <FloorPlan activeRoom={activeRoom} onSelectRoom={setActiveRoom} />
+          </section>
+        )}
+
+        {show3D && (
+          <section className="viewer-panel">
+            <div className="section-heading">
+              <div>
+                <p className="eyebrow">M1 / Digital House</p>
+                <h3>Prima rappresentazione volumetrica</h3>
+              </div>
+              <p className="muted">Volumi preliminari derivati dalla tavola 1:50. La stanza selezionata viene evidenziata.</p>
+            </div>
+            <House3D activeRoom={activeRoom} />
           </section>
         )}
 
@@ -97,7 +117,7 @@ export function HouseWorkspace() {
               <div className="render-placeholder muted-placeholder">
                 <span>Vista opzionale</span>
                 <strong>Da definire</strong>
-                <small>Verrà aggiunta solo se aumenta davvero la comprensione dell'ambiente.</small>
+                <small>Verrà aggiunta solo se aumenta davvero la comprensione dell&apos;ambiente.</small>
               </div>
             )}
           </div>
