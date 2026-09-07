@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { generateImage } from "ai";
 import sharp from "sharp";
 import { buildRenderBlueprint } from "@/lib/render-blueprint";
 import { staticRenderScenes } from "@/lib/render-scenes";
@@ -17,7 +18,7 @@ function buildPrompt(scene: (typeof staticRenderScenes)[number], userPrompt?: st
 
   return `Create a high-fidelity architectural interior render for a real Milan apartment.
 
-ABSOLUTE PRIORITY: preserve geometry and realistic scale over aesthetics. The attached blueprint is a geometry reference. Do not reinterpret it as a decorative floor plan. Use it to preserve object relationships, room proportions and constraints.
+ABSOLUTE PRIORITY: preserve geometry and realistic scale over aesthetics. The attached blueprint is a geometry reference. Do not copy its labels or graphic style into the output. Use it only to preserve object relationships, room proportions and constraints.
 
 GLOBAL SCALE:
 - Total apartment reference: ${calibrationAnchors.apartmentReferenceAreaM2} m².
@@ -40,15 +41,16 @@ HOUSE ELEMENTS:
 ${elements}
 
 VISUAL TARGET:
-- Quality comparable to a professional architect interior visualization or premium real-estate interior photograph.
+- Professional architect interior visualization / premium real-estate photography quality.
 - Realistic materials, believable joinery, correct furniture scale, natural daylight and physically plausible shadows.
 - Parquet must show actual wood planks, joints and subtle tonal variation whenever present.
 - Neutral contemporary Milan apartment aesthetic; avoid luxury-hotel scale, oversized furniture and empty expanses.
 - Preserve doors, circulation and structural elements.
+- Do not add text, labels, dimension lines, floor-plan graphics or blueprint marks to the final image.
 
 ${userPrompt ? `USER REQUEST: ${userPrompt}\nApply this request only where compatible with the fixed geometry and constraints above.` : "Generate the base configuration without inventing structural changes."}
 
-Return one landscape architectural render. No labels, captions, floor-plan graphics or text in the image.`;
+Return one landscape architectural render.`;
 }
 
 export async function POST(request: NextRequest) {
@@ -58,52 +60,42 @@ export async function POST(request: NextRequest) {
     const userPrompt = typeof body.prompt === "string" ? body.prompt.trim() : undefined;
     const scene = staticRenderScenes.find((item) => item.id === sceneId);
 
-    if (!scene) return NextResponse.json({ error: "Unknown render scene." }, { status: 400 });
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) {
+    if (!scene) {
+      return NextResponse.json({ error: "Unknown render scene." }, { status: 400 });
+    }
+
+    if (!process.env.AI_GATEWAY_API_KEY) {
       return NextResponse.json(
-        { error: "OPENAI_API_KEY is not configured in Vercel Environment Variables." },
+        { error: "AI_GATEWAY_API_KEY is not configured in Vercel Environment Variables." },
         { status: 503 }
       );
     }
 
     const svg = buildRenderBlueprint(scene.id, scene.cameraIntent);
-    const png = await sharp(Buffer.from(svg)).png().toBuffer();
-    const blueprint = `data:image/png;base64,${png.toString("base64")}`;
+    const blueprintPng = await sharp(Buffer.from(svg)).png().toBuffer();
     const prompt = buildPrompt(scene, userPrompt);
 
-    const form = new FormData();
-    form.append("model", "gpt-image-1");
-    form.append("prompt", prompt);
-    form.append("size", "1536x1024");
-    form.append("quality", "high");
-    form.append("input_fidelity", "high");
-    form.append("image", new Blob([new Uint8Array(png)], { type: "image/png" }), `${scene.id}-geometry.png`);
-
-    const response = await fetch("https://api.openai.com/v1/images/edits", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${apiKey}` },
-      body: form,
+    const { image } = await generateImage({
+      model: "openai/gpt-image-1",
+      prompt: {
+        text: prompt,
+        images: [blueprintPng],
+      },
+      size: "1536x1024",
+      providerOptions: {
+        openai: {
+          quality: "high",
+          inputFidelity: "high",
+        },
+      },
     });
-
-    const data = await response.json();
-    if (!response.ok) {
-      return NextResponse.json(
-        { error: data?.error?.message ?? "Image generation failed.", detail: data?.error ?? data },
-        { status: response.status }
-      );
-    }
-
-    const b64 = data?.data?.[0]?.b64_json;
-    const url = data?.data?.[0]?.url;
-    if (!b64 && !url) return NextResponse.json({ error: "The image API returned no image." }, { status: 502 });
 
     return NextResponse.json({
       sceneId,
-      image: b64 ? `data:image/png;base64,${b64}` : url,
-      geometryReference: blueprint,
+      image: `data:${image.mediaType};base64,${image.base64}`,
     });
   } catch (error) {
+    console.error("Render generation failed", error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Unexpected render error." },
       { status: 500 }
