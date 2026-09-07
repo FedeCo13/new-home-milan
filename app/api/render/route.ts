@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import sharp from "sharp";
 import { buildRenderBlueprint } from "@/lib/render-blueprint";
 import { staticRenderScenes } from "@/lib/render-scenes";
 import { initialHouseState } from "@/lib/house";
@@ -67,22 +68,22 @@ export async function POST(request: NextRequest) {
     }
 
     const svg = buildRenderBlueprint(scene.id, scene.cameraIntent);
-    const blueprint = `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`;
+    const png = await sharp(Buffer.from(svg)).png().toBuffer();
+    const blueprint = `data:image/png;base64,${png.toString("base64")}`;
     const prompt = buildPrompt(scene, userPrompt);
+
+    const form = new FormData();
+    form.append("model", "gpt-image-1");
+    form.append("prompt", prompt);
+    form.append("size", "1536x1024");
+    form.append("quality", "high");
+    form.append("input_fidelity", "high");
+    form.append("image", new Blob([new Uint8Array(png)], { type: "image/png" }), `${scene.id}-geometry.png`);
 
     const response = await fetch("https://api.openai.com/v1/images/edits", {
       method: "POST",
       headers: { Authorization: `Bearer ${apiKey}` },
-      body: (() => {
-        const form = new FormData();
-        form.append("model", "gpt-image-1");
-        form.append("prompt", prompt);
-        form.append("size", "1536x1024");
-        form.append("quality", "high");
-        form.append("input_fidelity", "high");
-        form.append("image", new Blob([svg], { type: "image/svg+xml" }), `${scene.id}-geometry.svg`);
-        return form;
-      })(),
+      body: form,
     });
 
     const data = await response.json();
@@ -95,9 +96,7 @@ export async function POST(request: NextRequest) {
 
     const b64 = data?.data?.[0]?.b64_json;
     const url = data?.data?.[0]?.url;
-    if (!b64 && !url) {
-      return NextResponse.json({ error: "The image API returned no image." }, { status: 502 });
-    }
+    if (!b64 && !url) return NextResponse.json({ error: "The image API returned no image." }, { status: 502 });
 
     return NextResponse.json({
       sceneId,
