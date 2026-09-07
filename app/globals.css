@@ -55,6 +55,40 @@ h3 { font-size: 20px; }
 .fidelity-badge strong { font-size: 13px; }
 .fidelity-badge span { font-size: 11px; color: #666158; line-height: 1.4; }
 
+.geometry-audit-card {
+  margin-bottom: 18px;
+  padding: 20px;
+  background: #f8f6f0;
+  border: 1px solid #cfc8ba;
+  border-radius: 12px;
+  display: grid;
+  gap: 18px;
+}
+.audit-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+.audit-grid > div {
+  padding: 13px;
+  border: 1px solid #ddd6ca;
+  border-radius: 9px;
+  background: #fff;
+  display: grid;
+  gap: 4px;
+}
+.audit-grid span { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: #716b62; }
+.audit-grid strong { font-size: 17px; }
+.audit-grid small { color: #79736a; line-height: 1.35; }
+.audit-callout {
+  padding: 12px 14px;
+  border-left: 3px solid #7f7567;
+  background: #eee8de;
+  color: #49453f;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
 .hero-render-card, .static-scenes-section, .prompt-card, .ideas-card, .model-summary {
   background: white; border: 1px solid #d8d8d2; border-radius: 12px;
 }
@@ -112,6 +146,7 @@ textarea { width: 100%; resize: vertical; border: 1px solid #d3d3cc; border-radi
   .app-shell { grid-template-columns: 230px 1fr; }
   .actions-grid, .render-meta { grid-template-columns: 1fr; }
   .static-scenes-grid { grid-template-columns: 1fr 1fr; }
+  .audit-grid { grid-template-columns: 1fr 1fr; }
   .render-stage { min-height: 480px; }
   .topbar { flex-direction: column; }
 }
