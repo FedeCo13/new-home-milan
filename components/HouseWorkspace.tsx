@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FloorPlan } from "@/components/FloorPlan";
 import { House3D } from "@/components/House3D";
 import { initialHouseState, type RoomId } from "@/lib/house";
@@ -9,6 +9,7 @@ export function HouseWorkspace() {
   const [activeRoom, setActiveRoom] = useState<RoomId>("soggiorno-cucina");
   const [showPlan, setShowPlan] = useState(false);
   const [show3D, setShow3D] = useState(true);
+  const [activeViewpointId, setActiveViewpointId] = useState<string | undefined>("living-1");
   const [prompt, setPrompt] = useState("");
   const [activity, setActivity] = useState<string[]>([]);
 
@@ -18,6 +19,15 @@ export function HouseWorkspace() {
   );
 
   const roomElements = initialHouseState.elements.filter((item) => item.roomId === activeRoom);
+
+  useEffect(() => {
+    setActiveViewpointId(room.viewpoints[0]?.id);
+  }, [room]);
+
+  const selectRoom = (roomId: RoomId) => {
+    setActiveRoom(roomId);
+    setShow3D(true);
+  };
 
   const submitPrompt = () => {
     const trimmed = prompt.trim();
@@ -45,7 +55,7 @@ export function HouseWorkspace() {
             <button
               className={item.id === activeRoom ? "room-link active" : "room-link"}
               key={item.id}
-              onClick={() => setActiveRoom(item.id)}
+              onClick={() => selectRoom(item.id)}
             >
               <span>{String(index + 1).padStart(2, "0")}</span>
               {item.name}
@@ -70,7 +80,15 @@ export function HouseWorkspace() {
             <h2>{room.name}</h2>
             <p className="muted room-description">{room.description}</p>
           </div>
-          <button className="primary-button" onClick={() => setShow3D(true)}>Avvia visita in 3D</button>
+          <button
+            className="primary-button"
+            onClick={() => {
+              setShow3D(true);
+              setActiveViewpointId(room.viewpoints[0]?.id);
+            }}
+          >
+            Avvia visita in 3D
+          </button>
         </header>
 
         {showPlan && (
@@ -82,44 +100,49 @@ export function HouseWorkspace() {
               </div>
               <p className="muted">Clicca un ambiente per aprirlo.</p>
             </div>
-            <FloorPlan activeRoom={activeRoom} onSelectRoom={setActiveRoom} />
+            <FloorPlan activeRoom={activeRoom} onSelectRoom={selectRoom} />
           </section>
         )}
 
         {show3D && (
           <section className="viewer-panel">
-            <div className="section-heading">
+            <div className="section-heading viewer-heading">
               <div>
                 <p className="eyebrow">M1 / Digital House</p>
-                <h3>Prima rappresentazione volumetrica</h3>
+                <h3>Modello 3D + viewpoint strategici</h3>
               </div>
-              <p className="muted">Volumi preliminari derivati dalla tavola 1:50. La stanza selezionata viene evidenziata.</p>
+              <button className="text-button" onClick={() => setActiveViewpointId(undefined)}>
+                Vista generale
+              </button>
             </div>
-            <House3D activeRoom={activeRoom} />
+            <House3D activeRoom={activeRoom} activeViewpointId={activeViewpointId} />
           </section>
         )}
 
-        <section className="hero-grid">
-          <div className="render-placeholder large">
-            <span>Vista principale</span>
-            <strong>{room.viewpoints[0]?.name ?? room.name}</strong>
-            <small>{room.viewpoints[0]?.description}</small>
+        <section className="strategic-views">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">Viste dell'ambiente</p>
+              <h3>{room.viewpoints.length} angoli strategici</h3>
+            </div>
+            <p className="muted">Clicca una vista: la camera 3D si posiziona nello stesso punto previsto per i futuri render.</p>
           </div>
-          <div className="thumbnail-column">
-            {room.viewpoints.slice(1, 3).map((viewpoint, index) => (
-              <div className="render-placeholder" key={viewpoint.id}>
-                <span>Vista {index + 2}</span>
+
+          <div className="viewpoint-grid">
+            {room.viewpoints.map((viewpoint, index) => (
+              <button
+                key={viewpoint.id}
+                className={activeViewpointId === viewpoint.id ? "viewpoint-card active" : "viewpoint-card"}
+                onClick={() => {
+                  setShow3D(true);
+                  setActiveViewpointId(viewpoint.id);
+                }}
+              >
+                <span>Vista {index + 1}</span>
                 <strong>{viewpoint.name}</strong>
                 <small>{viewpoint.description}</small>
-              </div>
+              </button>
             ))}
-            {room.viewpoints.length === 2 && (
-              <div className="render-placeholder muted-placeholder">
-                <span>Vista opzionale</span>
-                <strong>Da definire</strong>
-                <small>Verrà aggiunta solo se aumenta davvero la comprensione dell&apos;ambiente.</small>
-              </div>
-            )}
           </div>
         </section>
 
