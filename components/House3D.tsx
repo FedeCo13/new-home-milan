@@ -1,13 +1,17 @@
 "use client";
 
-import { Canvas } from "@react-three/fiber";
+import { useEffect, useMemo, useRef } from "react";
+import { Canvas, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
+import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import * as THREE from "three";
 import { roomGeometry, fixedGeometry } from "@/lib/geometry";
+import { getStrategicViewpoint, overviewViewpoint } from "@/lib/viewpoints";
 import type { RoomId } from "@/lib/house";
 
 type Props = {
   activeRoom: RoomId;
+  activeViewpointId?: string;
 };
 
 const roomTones: Record<RoomId, string> = {
@@ -18,6 +22,38 @@ const roomTones: Record<RoomId, string> = {
   camera: "#e5dfd7",
   "cabina-armadio": "#ddd6cb",
 };
+
+function CameraRig({ viewpointId }: { viewpointId?: string }) {
+  const { camera } = useThree();
+  const controlsRef = useRef<OrbitControlsImpl>(null);
+
+  const preset = useMemo(() => {
+    const strategic = getStrategicViewpoint(viewpointId);
+    return strategic ?? overviewViewpoint;
+  }, [viewpointId]);
+
+  useEffect(() => {
+    camera.position.set(...preset.position);
+    if (camera instanceof THREE.PerspectiveCamera) {
+      camera.fov = preset.fov;
+      camera.updateProjectionMatrix();
+    }
+    controlsRef.current?.target.set(...preset.target);
+    controlsRef.current?.update();
+  }, [camera, preset]);
+
+  return (
+    <OrbitControls
+      ref={controlsRef}
+      makeDefault
+      target={preset.target}
+      minDistance={1.1}
+      maxDistance={24}
+      maxPolarAngle={Math.PI / 2.02}
+      enablePan
+    />
+  );
+}
 
 function Floor({ roomId, active }: { roomId: RoomId; active: boolean }) {
   const geometry = roomGeometry.find((room) => room.roomId === roomId)!;
@@ -81,13 +117,11 @@ function FurnitureVolumes() {
 
   return (
     <>
-      {/* Structural column */}
       <mesh position={[cx, 1.35, cz]} castShadow>
         <boxGeometry args={[cw, 2.7, cd]} />
         <meshStandardMaterial color="#b9b4aa" />
       </mesh>
 
-      {/* Partially open TV/storage divider: volumes intentionally schematic. */}
       <group position={[3.65, 0, 3.85]}>
         <mesh position={[0, 0.42, 0]} castShadow>
           <boxGeometry args={[1.95, 0.84, 0.36]} />
@@ -103,7 +137,6 @@ function FurnitureVolumes() {
         </mesh>
       </group>
 
-      {/* Kitchen massing */}
       <mesh position={[5.9, 0.45, 1.05]} castShadow>
         <boxGeometry args={[2.15, 0.9, 0.65]} />
         <meshStandardMaterial color="#d8d4ca" />
@@ -113,7 +146,6 @@ function FurnitureVolumes() {
         <meshStandardMaterial color="#d3cec4" />
       </mesh>
 
-      {/* Sofa + dining table massing */}
       <mesh position={[5.25, 0.38, 3.6]} castShadow>
         <boxGeometry args={[2.25, 0.76, 0.88]} />
         <meshStandardMaterial color="#d7d1c7" />
@@ -123,7 +155,6 @@ function FurnitureVolumes() {
         <meshStandardMaterial color="#cfc5b4" />
       </mesh>
 
-      {/* Bathroom laundry stack and screen */}
       <mesh position={[0.53, 0.86, 6.15]} castShadow>
         <boxGeometry args={[0.62, 1.72, 0.66]} />
         <meshStandardMaterial color="#ecebe7" />
@@ -133,13 +164,11 @@ function FurnitureVolumes() {
         <meshStandardMaterial color="#c8bea9" />
       </mesh>
 
-      {/* Bed massing */}
       <mesh position={[1.75, 0.28, 10.9]} castShadow>
         <boxGeometry args={[1.75, 0.56, 2.0]} />
         <meshStandardMaterial color="#ddd7cf" />
       </mesh>
 
-      {/* Walk-in wardrobe massing on sides and bottom. */}
       <mesh position={[4.55, 1.1, 10.1]} castShadow>
         <boxGeometry args={[0.55, 2.2, 3.8]} />
         <meshStandardMaterial color="#cfc8bb" />
@@ -163,13 +192,11 @@ function HouseShell({ activeRoom }: { activeRoom: RoomId }) {
         <Floor key={room.roomId} roomId={room.roomId} active={room.roomId === activeRoom} />
       ))}
 
-      {/* External shell. Main gaps are represented by transparent window panels. */}
       <Wall x={3.6} z={0} length={7.2} />
       <Wall x={3.6} z={12.6} length={7.2} />
       <Wall x={0} z={6.3} length={12.6} axis="z" />
       <Wall x={7.2} z={6.3} length={12.6} axis="z" />
 
-      {/* Internal partitions with approximate door gaps from the 1:50 drawing. */}
       <Wall x={1.25} z={5.5} length={2.5} />
       <Wall x={2.95} z={5.5} length={0.8} />
       <Wall x={3.35} z={7.1} length={3.0} axis="z" />
@@ -180,13 +207,11 @@ function HouseShell({ activeRoom }: { activeRoom: RoomId }) {
       <Wall x={6.65} z={7.45} length={1.1} />
       <Wall x={5.75} z={6.0} length={2.0} axis="z" />
 
-      {/* Window markers on the facade shown in the architect plan. */}
       <WindowPanel x={0.001} z={1.55} width={1.35} />
       <WindowPanel x={0.001} z={4.25} width={1.25} />
       <WindowPanel x={0.001} z={6.9} width={0.95} />
       <WindowPanel x={0.001} z={9.9} width={1.35} />
 
-      {/* Approximate circulation openings */}
       <DoorMarker x={3.0} z={5.49} />
       <DoorMarker x={3.0} z={8.54} />
       <DoorMarker x={5.8} z={7.44} />
@@ -196,31 +221,22 @@ function HouseShell({ activeRoom }: { activeRoom: RoomId }) {
   );
 }
 
-export function House3D({ activeRoom }: Props) {
+export function House3D({ activeRoom, activeViewpointId }: Props) {
+  const activePreset = getStrategicViewpoint(activeViewpointId);
+
   return (
     <div className="house-3d">
-      <Canvas
-        shadows
-        camera={{ position: [10.8, 11.5, 15.5], fov: 38, near: 0.1, far: 100 }}
-        dpr={[1, 1.5]}
-      >
+      <Canvas shadows camera={{ position: overviewViewpoint.position, fov: overviewViewpoint.fov, near: 0.1, far: 100 }} dpr={[1, 1.5]}>
         <color attach="background" args={["#ebe9e3"]} />
         <ambientLight intensity={1.35} />
         <directionalLight position={[5, 10, 4]} intensity={2.2} castShadow shadow-mapSize={[1024, 1024]} />
         <HouseShell activeRoom={activeRoom} />
         <gridHelper args={[18, 36, "#bcb8af", "#d8d5ce"]} position={[3.6, -0.025, 6.3]} />
-        <OrbitControls
-          makeDefault
-          target={[3.6, 1.0, 6.3]}
-          minDistance={8}
-          maxDistance={24}
-          maxPolarAngle={Math.PI / 2.08}
-          enablePan
-        />
+        <CameraRig viewpointId={activeViewpointId} />
       </Canvas>
       <div className="viewer-badge">
-        <strong>Modello volumetrico M1</strong>
-        <span>Trascina per ruotare · rotella per zoom · tasto destro per spostare</span>
+        <strong>{activePreset ? "Vista strategica" : "Modello volumetrico M1"}</strong>
+        <span>{activePreset ? activePreset.purpose : "Trascina per ruotare · rotella per zoom · tasto destro per spostare"}</span>
       </div>
     </div>
   );
