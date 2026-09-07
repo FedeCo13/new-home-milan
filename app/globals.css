@@ -55,13 +55,15 @@ h3 { font-size: 20px; }
 .room-link:hover, .room-link.active { background: #ecece6; color: #000; }
 .room-link span { color: #8a8a80; font-size: 12px; padding-top: 2px; }
 
-.primary-button, .secondary-button {
+.primary-button, .secondary-button, .toggle-button {
   border-radius: 8px;
   padding: 11px 15px;
   cursor: pointer;
 }
 .primary-button { border: 1px solid #111; background: #111; color: white; }
 .secondary-button { border: 1px solid #cfcfc7; background: white; color: #111; }
+.toggle-button { border: 1px solid #cfcfc7; background: #f7f6f2; color: #55524b; }
+.toggle-button.active { border-color: #111; background: #ece8df; color: #111; }
 .text-button { border: 0; background: transparent; padding: 6px 0; cursor: pointer; color: #55524b; text-decoration: underline; text-underline-offset: 3px; }
 
 .plan-panel, .viewer-panel, .strategic-views {
@@ -73,6 +75,7 @@ h3 { font-size: 20px; }
 }
 .section-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; }
 .viewer-heading { align-items: center; }
+.viewer-actions { display: flex; align-items: center; gap: 12px; }
 
 .house-3d {
   height: 620px;
@@ -163,4 +166,5 @@ textarea { width: 100%; resize: vertical; border: 1px solid #d3d3cc; border-radi
   .actions-grid, .floor-plan-wrap { grid-template-columns: 1fr; }
   .viewpoint-grid { grid-template-columns: 1fr 1fr; }
   .house-3d { height: 520px; }
+  .viewer-actions { align-items: flex-end; flex-direction: column; }
 }
