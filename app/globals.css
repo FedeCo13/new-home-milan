@@ -110,6 +110,20 @@ h3 { font-size: 20px; }
 .render-pending strong { font-size: 30px; margin-top: 8px; }
 .render-pending p { max-width: 650px; line-height: 1.55; margin: 12px 0; }
 .render-pending small { line-height: 1.5; opacity: .82; }
+.render-generation-bar {
+  padding: 15px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+  border-top: 1px solid #e2dfd8;
+  background: #faf9f5;
+}
+.render-generation-bar > div:first-child { display: grid; gap: 3px; }
+.render-generation-bar strong { font-size: 14px; }
+.render-generation-bar span { font-size: 12px; color: #69645c; }
+.render-generation-actions { display: flex; gap: 9px; flex-wrap: wrap; justify-content: flex-end; }
+.render-error { padding: 12px 20px; border-top: 1px solid #e5c7c1; background: #fff0ed; color: #7b2e24; font-size: 13px; line-height: 1.45; }
 .render-meta { padding: 18px 20px; display: grid; grid-template-columns: 1fr 1.2fr; gap: 28px; border-top: 1px solid #e2dfd8; }
 .fidelity-list { margin: 6px 0 0; padding-left: 18px; color: #56534d; line-height: 1.55; font-size: 13px; }
 
@@ -125,9 +139,11 @@ h3 { font-size: 20px; }
 .scene-thumbnail { height: 118px; background: linear-gradient(135deg, #d5ccc0, #eee8de); display: grid; place-items: center; overflow: hidden; }
 .scene-thumbnail img { width: 100%; height: 100%; object-fit: cover; }
 .scene-thumbnail span { font-size: 30px; color: #8c8378; }
+.scene-thumbnail .scene-loading { font-size: 34px; animation: pulse 1s ease-in-out infinite; }
 .static-scene-card > div:last-child { padding: 14px; display: grid; gap: 6px; }
 .static-scene-card strong { font-size: 16px; }
 .static-scene-card small { color: #67635c; line-height: 1.45; }
+@keyframes pulse { 0%,100% { opacity: .25; } 50% { opacity: 1; } }
 
 .actions-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-top: 18px; }
 .prompt-card, .ideas-card, .model-summary { padding: 20px; }
@@ -149,4 +165,5 @@ textarea { width: 100%; resize: vertical; border: 1px solid #d3d3cc; border-radi
   .audit-grid { grid-template-columns: 1fr 1fr; }
   .render-stage { min-height: 480px; }
   .topbar { flex-direction: column; }
+  .render-generation-bar { align-items: flex-start; flex-direction: column; }
 }
