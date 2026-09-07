@@ -9,6 +9,7 @@ export function HouseWorkspace() {
   const [activeRoom, setActiveRoom] = useState<RoomId>("soggiorno-cucina");
   const [showPlan, setShowPlan] = useState(false);
   const [show3D, setShow3D] = useState(true);
+  const [focusMode, setFocusMode] = useState(true);
   const [activeViewpointId, setActiveViewpointId] = useState<string | undefined>("living-1");
   const [prompt, setPrompt] = useState("");
   const [activity, setActivity] = useState<string[]>([]);
@@ -27,6 +28,7 @@ export function HouseWorkspace() {
   const selectRoom = (roomId: RoomId) => {
     setActiveRoom(roomId);
     setShow3D(true);
+    setFocusMode(true);
   };
 
   const submitPrompt = () => {
@@ -84,6 +86,7 @@ export function HouseWorkspace() {
             className="primary-button"
             onClick={() => {
               setShow3D(true);
+              setFocusMode(true);
               setActiveViewpointId(room.viewpoints[0]?.id);
             }}
           >
@@ -109,13 +112,21 @@ export function HouseWorkspace() {
             <div className="section-heading viewer-heading">
               <div>
                 <p className="eyebrow">M1 / Digital House</p>
-                <h3>Modello 3D + viewpoint strategici</h3>
+                <h3>{focusMode ? "Focus ambiente" : "Modello 3D completo"}</h3>
               </div>
-              <button className="text-button" onClick={() => setActiveViewpointId(undefined)}>
-                Vista generale
-              </button>
+              <div className="viewer-actions">
+                <button
+                  className={focusMode ? "toggle-button active" : "toggle-button"}
+                  onClick={() => setFocusMode((value) => !value)}
+                >
+                  {focusMode ? "Mostra tutta la casa" : "Focus ambiente"}
+                </button>
+                <button className="text-button" onClick={() => setActiveViewpointId(undefined)}>
+                  Vista generale
+                </button>
+              </div>
             </div>
-            <House3D activeRoom={activeRoom} activeViewpointId={activeViewpointId} />
+            <House3D activeRoom={activeRoom} activeViewpointId={activeViewpointId} focusMode={focusMode} />
           </section>
         )}
 
@@ -135,6 +146,7 @@ export function HouseWorkspace() {
                 className={activeViewpointId === viewpoint.id ? "viewpoint-card active" : "viewpoint-card"}
                 onClick={() => {
                   setShow3D(true);
+                  setFocusMode(true);
                   setActiveViewpointId(viewpoint.id);
                 }}
               >
