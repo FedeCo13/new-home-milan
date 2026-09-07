@@ -60,7 +60,7 @@ export const roomGeometry: RoomGeometry[] = [
     polygon: [[0, 0], [5.09, 0], [5.09, 5.72], [0, 5.72]],
     source: "architect-plan-1:50",
     confidence: "scaled",
-    notes: "Day zone occupies the north portion of the plan. Dining table and sofa are both in the living zone; the kitchen sits to the south of them behind the TV/storage filter.",
+    notes: "Day zone occupies the north portion of the plan. Dining table and sofa are both in the living zone; the kitchen sits to the south of them. The living furniture composition includes two distinct elements: a lower/content storage unit (element 3) and a separate TV unit above/behind it as shown in the architect section/reference.",
   },
   {
     roomId: "bagno-lavanderia",
@@ -109,20 +109,27 @@ export const auditedDayZone = {
   sofa: {
     centerApprox: [2.97, 0.80] as Point2D,
     footprintApproxM: [2.24, 1.58] as Point2D,
-    relationship: "living-zone; north-east; faces TV divider; not adjacent to kitchen" as const,
+    relationship: "living-zone; north-east; faces TV composition; not adjacent to kitchen" as const,
   },
-  tvStorageFilter: {
-    centerApprox: [2.15, 3.51] as Point2D,
-    widthApproxM: 2.67,
-    depthApproxM: 0.38,
-    relationship: "between living/dining and kitchen; partially open; never a full wall" as const,
+  livingStorageUnit: {
+    semanticLabel: "element-3" as const,
+    role: "content-storage-unit" as const,
+    relationship: "separate from the TV unit; forms the lower/content portion of the composition between living and kitchen" as const,
+    designReference: "architect proposal: open vertical structure with partial closed storage volumes; liked by the user but not yet a fixed final model" as const,
+    confidence: "user-confirmed-semantics" as const,
+  },
+  livingTvUnit: {
+    semanticLabel: "blue-circled-tv-unit" as const,
+    role: "tv-unit" as const,
+    relationship: "distinct from element 3; corresponds to the TV furniture highlighted in blue in the shared section" as const,
+    confidence: "user-confirmed-semantics" as const,
   },
   structuralColumn: {
-    relationship: "separate structural element adjacent to the TV/storage filter; must remain visually distinct" as const,
+    relationship: "separate structural element adjacent to the living furniture composition; must remain visually distinct from both storage and TV units" as const,
     confidence: "inferred-from-plan-and-architect-renders" as const,
   },
   kitchen: {
-    zone: "south side of day room, behind TV/storage filter" as const,
+    zone: "south side of day room, behind the living furniture composition" as const,
     layout: "L-shaped as drawn; long run on bathroom-side wall plus west-side return" as const,
     standardBaseDepthM: 0.60,
     relationship: "separate from sofa/table zone while remaining part of the open-plan room" as const,
@@ -151,11 +158,4 @@ export const auditedBathroom = {
 // Kept for future 3D/tour work; static renders consume the audited semantic layout first.
 export const fixedGeometry = {
   ceilingHeightM: calibrationAnchors.ceilingHeightM,
-  tvPartitionLiving: {
-    id: "tv-partition",
-    position: auditedDayZone.tvStorageFilter.centerApprox,
-    widthM: auditedDayZone.tvStorageFilter.widthApproxM,
-    depthM: auditedDayZone.tvStorageFilter.depthApproxM,
-    confidence: "scaled" as const,
-  },
 };
