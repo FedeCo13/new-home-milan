@@ -70,7 +70,7 @@ export const initialHouseState: HouseState = {
     {
       id: "soggiorno-cucina",
       name: "Zona giorno / Cucina",
-      description: "Grande zona giorno con tavolo ovale e divano; la cucina occupa una porzione distinta dell'open space ed è filtrata dal mobile TV contenitivo parzialmente aperto. Colonna portante centrale fissa.",
+      description: "Zona giorno con tavolo ovale e divano; cucina distinta nello stesso open space. Tra living/pranzo e cucina sono presenti due elementi di arredo separati: il mobile contenitivo indicato come elemento 3 e il mobile TV soprastante/evidenziato in azzurro. Colonna portante centrale fissa.",
       viewpoints: [],
     },
     {
@@ -82,7 +82,7 @@ export const initialHouseState: HouseState = {
     {
       id: "camera",
       name: "Camera matrimoniale",
-      description: "Camera matrimoniale di circa 13 m² con accesso alla cabina armadio dedicata.",
+      description: "Camera matrimoniale con accesso alla cabina armadio dedicata.",
       viewpoints: [],
     },
     {
@@ -94,10 +94,11 @@ export const initialHouseState: HouseState = {
   ],
   elements: [
     { id: "living-parquet", name: "Parquet zona giorno", category: "surface", roomId: "soggiorno-cucina", configurable: true, notes: "Deve essere sempre chiaramente leggibile nei render della zona giorno." },
-    { id: "living-column", name: "Colonna portante soggiorno", category: "structure", roomId: "soggiorno-cucina", configurable: false, notes: "Elemento strutturale centrale distinto dal mobile TV." },
-    { id: "tv-partition", name: "Mobile TV divisorio aperto", category: "furniture", roomId: "soggiorno-cucina", configurable: true, notes: "Mobile contenitivo/filtro tra cucina e zona divano-tavolo; non è una parete piena e deve mantenere continuità visiva." },
+    { id: "living-column", name: "Colonna portante soggiorno", category: "structure", roomId: "soggiorno-cucina", configurable: false, notes: "Elemento strutturale centrale distinto sia dal mobile contenitivo sia dal mobile TV." },
+    { id: "living-storage-unit", name: "Mobile contenitivo · elemento 3", category: "furniture", roomId: "soggiorno-cucina", configurable: true, notes: "È l'elemento indicato con il numero 3 nella sezione condivisa. È separato dal mobile TV. Può integrare parti chiuse e parti aperte; il riferimento dell'architetto con struttura a giorno e volumi contenitivi è una direzione estetica gradita, non ancora un modello vincolante." },
+    { id: "living-tv-unit", name: "Mobile TV · elemento evidenziato in azzurro", category: "furniture", roomId: "soggiorno-cucina", configurable: true, notes: "È il mobile della TV cerchiato in azzurro nella sezione condivisa. Deve essere modellato come elemento distinto dal mobile contenitivo n. 3." },
     { id: "dining-table", name: "Tavolo ovale zona giorno", category: "furniture", roomId: "soggiorno-cucina", configurable: true, notes: "È nella zona giorno; vicino alla cucina ma non dentro la cucina." },
-    { id: "sofa", name: "Divano zona living", category: "furniture", roomId: "soggiorno-cucina", configurable: true, notes: "Rimane sul lato living del filtro TV." },
+    { id: "sofa", name: "Divano zona living", category: "furniture", roomId: "soggiorno-cucina", configurable: true, notes: "Rimane nella posizione indicata dalla planimetria e rivolto verso la TV." },
     { id: "kitchen", name: "Cucina modulare", category: "kitchen", roomId: "soggiorno-cucina", configurable: true, notes: "Configurazione modificabile via prompt; posizione base deve seguire la planimetria master." },
     { id: "shower", name: "Doccia laterale", category: "bathroom", roomId: "bagno-lavanderia", configurable: true, notes: "Zona doccia sul lato sinistro con quota di riferimento 1,46 m; non occupa tutta la parete." },
     { id: "bath-vanity", name: "Mobile lavabo", category: "bathroom", roomId: "bagno-lavanderia", configurable: true },
