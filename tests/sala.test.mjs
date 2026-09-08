@@ -1,0 +1,10 @@
+import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';
+import {initial,applyPatch,localPrompt,objectAppearance} from '../public/sala/policy.mjs';
+import {roomObjects} from '../public/sala/render.mjs';
+const scene=JSON.parse(fs.readFileSync(new URL('../public/sala/scene.json',import.meta.url)));
+test('unsupported geometry, positions and malicious keys rejected',()=>{for(const p of [{x:2},{vertices:[]},{color:'#879b82',position:[1,2,3]},JSON.parse('{"__proto__":{}}'),{sofa:'large'},{light:100},{}])assert.throws(()=>applyPatch(initial,p));});
+test('sofa color changes no other object, material or visibility',()=>{const after=applyPatch(initial,{color:'#879b82'});for(const o of scene.objects){const a=objectAppearance(o,initial),b=objectAppearance(o,after);if(!o.id.startsWith('sofa_')||o.id.startsWith('sofa_leg_'))assert.deepEqual(a,b);else{assert.equal(b.color,'#879b82');assert.equal(a.visible,b.visible);}}});
+test('linear variant only hides chaise extension',()=>{const after=applyPatch(initial,{sofa:'lineare'});for(const o of scene.objects)assert.equal(objectAppearance(o,after).visible,!o.id.startsWith('sofa_chaise_'));});
+test('presentation cutaway and modifications leave source geometry untouched',()=>{const before=JSON.stringify(scene);roomObjects(scene);const state=applyPatch(initial,{color:'#879b82',material:'velluto',light:'calda'});scene.objects.forEach(o=>objectAppearance(o,state));assert.equal(JSON.stringify(scene),before);});
+test('compound or negated commands never partly execute through offline parser',()=>{for(const s of ['Non rendere il divano verde salvia','Rendi il divano verde salvia e sposta il tavolo','Sposta il divano','Rendi tutto più bello'])assert.equal(localPrompt(s),null);assert.deepEqual(localPrompt('Rendi il divano verde salvia'),{color:'#879b82'});});
+test('shared state validates each field and round trips',()=>{const state=applyPatch(initial,{color:'#879b82'});assert.deepEqual(applyPatch(initial,JSON.parse(JSON.stringify(state))),state);assert.throws(()=>applyPatch(initial,{color:'url(evil)'}));});
