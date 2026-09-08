@@ -7,3 +7,5 @@ out/
 .vercel/
 .DS_Store
 *.log
+public/gallery/*.png
+scripts/__pycache__/

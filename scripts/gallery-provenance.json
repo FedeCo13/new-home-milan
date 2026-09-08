@@ -1,0 +1,43 @@
+{
+  "sourceSha256": "e11cab970e90b6fb8c024252a3a540e72b8b866daf28ba5edad3adbbc2d9242e",
+  "viewsPerRoom": 3,
+  "rooms": [
+    {
+      "id": "soggiorno",
+      "title": "Soggiorno",
+      "row": 0,
+      "objects": 228
+    },
+    {
+      "id": "cucina",
+      "title": "Cucina",
+      "row": 1,
+      "objects": 113
+    },
+    {
+      "id": "zona-giorno",
+      "title": "Soggiorno + cucina",
+      "row": 2,
+      "objects": 327
+    },
+    {
+      "id": "bagno",
+      "title": "Bagno",
+      "row": 3,
+      "objects": 109
+    },
+    {
+      "id": "camera",
+      "title": "Camera da letto",
+      "row": 4,
+      "objects": 113
+    },
+    {
+      "id": "cabina",
+      "title": "Cabina armadio",
+      "row": 5,
+      "objects": 77
+    }
+  ],
+  "presentation": "Boundary walls sectioned at 0.55 m, ceiling hidden; original furniture unchanged."
+}

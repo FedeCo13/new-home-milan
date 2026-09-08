@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Casa Milano",
-  description: "Simulatore della futura casa a Milano",
+  description: "Sei ambienti, diciotto viste statiche del modello approvato di Casa Milano",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
